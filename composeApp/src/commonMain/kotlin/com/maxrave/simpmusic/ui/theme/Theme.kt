@@ -114,7 +114,9 @@ fun AppTheme(
             null
         }
     val seedColor =
-        if (themeColorSource == DataStoreManager.THEME_COLOR_CUSTOM) {
+        if (themeColorSource == DataStoreManager.THEME_COLOR_CUSTOM ||
+            themeColorSource == THEME_COLOR_PALETTE
+        ) {
             customThemeColor ?: seed
         } else {
             seed

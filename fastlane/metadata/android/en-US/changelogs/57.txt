@@ -1,0 +1,2 @@
+- New: choose from 10 curated named color palettes (Ocean, Sunset, Forest, Lavender, Rose, Amber, Mono, Mint, Berry, Sky) in Settings → Theme color → Palette
+- Improvements: desktop installers and packaging now target the 1.7.0 release across Windows (.msix), macOS (.dmg) and Linux (.AppImage)

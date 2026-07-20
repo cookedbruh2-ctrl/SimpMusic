@@ -1,0 +1,2 @@
+- Mới: chọn từ 10 bảng màu đặt tên được tuyển chọn (Ocean, Sunset, Forest, Lavender, Rose, Amber, Mono, Mint, Berry, Sky) tại Cài đặt → Màu chủ đề → Bảng màu
+- Cải tiến: trình cài đặt và đóng gói dành cho máy tính hiện được cập nhật lên bản phát hành 1.7.0 cho Windows (.msix), macOS (.dmg) và Linux (.AppImage)

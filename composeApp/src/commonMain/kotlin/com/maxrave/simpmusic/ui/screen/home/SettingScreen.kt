@@ -122,6 +122,9 @@ import com.maxrave.simpmusic.ui.navigation.destination.login.LoginDestination
 import com.maxrave.simpmusic.ui.navigation.destination.login.SpotifyLoginDestination
 import com.maxrave.simpmusic.ui.theme.md_theme_dark_primary
 import com.maxrave.simpmusic.expect.ui.isWallpaperDynamicColorSupported
+import com.maxrave.simpmusic.ui.theme.THEME_COLOR_PALETTE
+import com.maxrave.simpmusic.ui.theme.ThemePalettes
+import com.maxrave.simpmusic.ui.theme.findThemePalette
 import com.maxrave.simpmusic.ui.theme.parseThemeColorHex
 import com.maxrave.simpmusic.ui.theme.typo
 import com.maxrave.simpmusic.utils.VersionManager
@@ -322,7 +325,9 @@ import simpmusic.composeapp.generated.resources.theme
 import simpmusic.composeapp.generated.resources.theme_color
 import simpmusic.composeapp.generated.resources.theme_color_custom
 import simpmusic.composeapp.generated.resources.theme_color_default
+import simpmusic.composeapp.generated.resources.theme_color_palette
 import simpmusic.composeapp.generated.resources.theme_color_wallpaper
+import simpmusic.composeapp.generated.resources.theme_palette
 import simpmusic.composeapp.generated.resources.theme_mode_dark
 import simpmusic.composeapp.generated.resources.theme_mode_light
 import simpmusic.composeapp.generated.resources.theme_mode_system
@@ -473,6 +478,7 @@ fun SettingScreen(
     val themeColorSource by sharedViewModel.getThemeColorSource().collectAsStateWithLifecycle(DataStoreManager.THEME_COLOR_DEFAULT)
     val customThemeColorHex by sharedViewModel.getCustomThemeColor().collectAsStateWithLifecycle(DataStoreManager.DEFAULT_THEME_COLOR_HEX)
     var showColorPickerDialog by rememberSaveable { mutableStateOf(false) }
+    var showPalettePickerDialog by rememberSaveable { mutableStateOf(false) }
     val discordLoggedIn by viewModel.discordLoggedIn.collectAsStateWithLifecycle()
     val richPresenceEnabled by viewModel.richPresenceEnabled.collectAsStateWithLifecycle()
     val keepServiceAlive by viewModel.keepServiceAlive.collectAsStateWithLifecycle()
@@ -572,6 +578,7 @@ fun SettingScreen(
                         if (isWallpaperDynamicColorSupported()) {
                             add(DataStoreManager.THEME_COLOR_WALLPAPER to stringResource(Res.string.theme_color_wallpaper))
                         }
+                        add(THEME_COLOR_PALETTE to stringResource(Res.string.theme_color_palette))
                         add(DataStoreManager.THEME_COLOR_CUSTOM to stringResource(Res.string.theme_color_custom))
                     }
                 SettingItem(
@@ -590,8 +597,9 @@ fun SettingScreen(
                                         val selected = state.selectOne?.getSelected()
                                         colorSourceLabels.firstOrNull { it.second == selected }?.first?.let {
                                             sharedViewModel.setThemeColorSource(it)
-                                            if (it == DataStoreManager.THEME_COLOR_CUSTOM) {
-                                                showColorPickerDialog = true
+                                            when (it) {
+                                                THEME_COLOR_PALETTE -> showPalettePickerDialog = true
+                                                DataStoreManager.THEME_COLOR_CUSTOM -> showColorPickerDialog = true
                                             }
                                         }
                                     },
@@ -600,6 +608,14 @@ fun SettingScreen(
                         )
                     },
                 )
+                if (themeColorSource == THEME_COLOR_PALETTE) {
+                    val selectedPalette = findThemePalette(customThemeColorHex)
+                    SettingItem(
+                        title = stringResource(Res.string.theme_palette),
+                        subtitle = selectedPalette?.let { stringResource(it.nameRes) } ?: "",
+                        onClick = { showPalettePickerDialog = true },
+                    )
+                }
                 if (themeColorSource == DataStoreManager.THEME_COLOR_CUSTOM) {
                     SettingItem(
                         title = stringResource(Res.string.custom_color),
@@ -2339,6 +2355,73 @@ fun SettingScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showColorPickerDialog = false }) {
+                    Text(text = stringResource(Res.string.cancel))
+                }
+            },
+        )
+    }
+    if (showPalettePickerDialog) {
+        // Seed hex of the palette currently applied, if the stored custom color
+        // matches one of the curated seeds. Defaults to the first palette so the
+        // dialog always has a selection even before the user picks one.
+        val initiallySelected = findThemePalette(customThemeColorHex)?.seedHex ?: ThemePalettes.first().seedHex
+        var pendingPaletteHex by remember(initiallySelected) { mutableStateOf(initiallySelected) }
+        AlertDialog(
+            onDismissRequest = { showPalettePickerDialog = false },
+            title = { Text(text = stringResource(Res.string.theme_palette), style = typo().titleSmall) },
+            text = {
+                Column {
+                    ThemePalettes.chunked(5).forEach { rowPalettes ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            rowPalettes.forEach { palette ->
+                                val isSelected = pendingPaletteHex.equals(palette.seedHex, ignoreCase = true)
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier =
+                                        Modifier
+                                            .padding(4.dp)
+                                            .weight(1f)
+                                            .clickable { pendingPaletteHex = palette.seedHex },
+                                ) {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(palette.seedColor)
+                                                .border(
+                                                    width = if (isSelected) 3.dp else 0.dp,
+                                                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                                                    shape = CircleShape,
+                                                ),
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = stringResource(palette.nameRes),
+                                        style = typo().labelSmall,
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
+                            // Pad short rows so chips line up across rows of equal width.
+                            repeat(5 - rowPalettes.size) {
+                                Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        sharedViewModel.setCustomThemeColor(pendingPaletteHex)
+                        sharedViewModel.setThemeColorSource(THEME_COLOR_PALETTE)
+                        showPalettePickerDialog = false
+                    },
+                ) { Text(text = stringResource(Res.string.change)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPalettePickerDialog = false }) {
                     Text(text = stringResource(Res.string.cancel))
                 }
             },
