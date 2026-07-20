@@ -474,6 +474,7 @@ if (getPlatform() == Platform.Android) {
 - **SimpMusic Lyrics voting**: Vote functionality for community lyrics
 
 ### New Features (post-1.0.4, dev branch)
+- **Named color palettes (2026-07, v1.7.0)**: new `PALETTE` theme color source selectable in Settings → Theme color → Palette. Ten curated named seeds (Ocean, Sunset, Forest, Lavender, Rose, Amber, Mono, Mint, Berry, Sky) drive MaterialKolor's `rememberDynamicColorScheme` for the full light/dark ColorScheme. Implemented entirely in `composeApp` (`ui/theme/ThemePalettes.kt` + `Theme.kt` + `SettingScreen.kt`) with **no `core` submodule change**: the `PALETTE` source value is a plain string passed to `DataStoreManager.setThemeColorSource(String)`, and the selected palette's seed hex is persisted via the existing `customThemeColor` preference (so `AppTheme` resolves `PALETTE` identically to `CUSTOM` for seed derivation).
 - **Deep link support**: `simpmusic://` and `simpmusic.org` URL schemes
 - **Desktop Crash dialog**: Error reporting UI for desktop
 - **Playback speed/pitch controls**: Redesigned UI with improved animations
@@ -505,6 +506,6 @@ After completing any of the following types of changes, the AI agent **MUST** up
 
 *This document helps AI Agents quickly understand the SimpMusic project. Update regularly when there are major changes to architecture or structure.*
 
-**Last updated**: 2026-07-18
+**Last updated**: 2026-07-20
 **Project version**: Check latest release on GitHub
 **Maintained by**: maxrave-dev and contributors
