@@ -168,11 +168,11 @@ compose.desktop {
                     .isMacOsX
             ) {
                 listTarget.addAll(
-                    listOf(TargetFormat.Dmg, TargetFormat.Msi),
+                    listOf(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe),
                 )
             } else {
                 listTarget.addAll(
-                    listOf(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.AppImage),
+                    listOf(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.AppImage),
                 )
             }
             targetFormats(*listTarget.toTypedArray())
